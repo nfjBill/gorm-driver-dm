@@ -69,6 +69,15 @@ func (stb *STable) Delete() error {
 	return tx.Commit().Error
 }
 
+func (stb *STable) Update(dest interface{}) error {
+	tx := stb.Conn.Begin()
+	if err := tx.Where(stb.Table).Updates(dest).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
+}
+
 func (stb *STable) AutoMigrate(dst ...interface{}) error {
 	return stb.Conn.AutoMigrate(dst...)
 }

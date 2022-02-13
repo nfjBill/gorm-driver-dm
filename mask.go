@@ -3,8 +3,8 @@ package dm
 import (
 	"database/sql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"reflect"
+	"strings"
 )
 
 type STable struct {
@@ -54,10 +54,21 @@ func (stb *STable) GetAll(dest interface{}) error {
 }
 
 func (stb *STable) ClausesAssignmentColumns(name string, doUpdates []string) error {
-	return stb.Conn.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: name}},
-		DoUpdates: clause.AssignmentColumns(doUpdates),
-	}).Create(stb.Table).Error
+	we := RefInclude(RefClone(stb.Table), []string{name})
+	up := RefInclude(RefClone(stb.Table), doUpdates)
+
+	var data []interface{}
+	err := stb.Conn.Model(we).Select("ID").Where(we).Find(&data).Error
+	if len(data) > 0 {
+		tx := stb.Conn.Begin()
+		if err = tx.Where(we).Updates(up).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+		return tx.Commit().Error
+	} else {
+		return stb.Conn.Create(stb.Table).Error
+	}
 }
 
 func (stb *STable) Delete() error {
@@ -88,4 +99,38 @@ func (stb *STable) DropTable(dest ...interface{}) error {
 
 func (stb *STable) HasTable(dest interface{}) bool {
 	return stb.Conn.Migrator().HasTable(dest)
+}
+
+func RefClone(inter interface{}) interface{} {
+	nInter := reflect.New(reflect.TypeOf(inter).Elem())
+
+	val := reflect.ValueOf(inter).Elem()
+	nVal := nInter.Elem()
+	for i := 0; i < val.NumField(); i++ {
+		nvField := nVal.Field(i)
+		nvField.Set(val.Field(i))
+	}
+
+	return nInter.Interface()
+}
+
+func RefInclude(inter interface{}, inc []string) interface{} {
+	v := reflect.ValueOf(inter).Elem()
+
+	for i := 0; i < v.Type().NumField(); i++ {
+		n := v.Type().Field(i).Name
+		var ins bool
+
+		for _, str := range inc {
+			if strings.ToLower(n) == strings.ToLower(str) {
+				ins = true
+			}
+		}
+
+		if !ins {
+			v.Field(i).Set(reflect.Zero(v.Field(i).Type()))
+		}
+	}
+
+	return inter
 }

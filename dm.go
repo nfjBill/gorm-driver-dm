@@ -3,6 +3,7 @@ package dm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/nfjBill/gorm-driver-dm/clauses"
 	"gorm.io/gorm/utils"
 	"regexp"
 	"strconv"
@@ -73,6 +74,78 @@ func (d Dialector) Initialize(db *gorm.DB) (err error) {
 func (d Dialector) ClauseBuilders() map[string]clause.ClauseBuilder {
 	return map[string]clause.ClauseBuilder{
 		"LIMIT": d.RewriteLimit,
+		"WHERE": d.RewriteWhere,
+	}
+}
+
+func (d Dialector) RewriteWhere(c clause.Clause, builder clause.Builder) {
+	if where, ok := c.Expression.(clause.Where); ok {
+		builder.WriteString(" WHERE ")
+
+		// Switch position if the first query expression is a single Or condition
+		for idx, expr := range where.Exprs {
+			if v, ok := expr.(clause.OrConditions); !ok || len(v.Exprs) > 1 {
+				if idx != 0 {
+					where.Exprs[0], where.Exprs[idx] = where.Exprs[idx], where.Exprs[0]
+				}
+				break
+			}
+		}
+
+		wrapInParentheses := false
+		for idx, expr := range where.Exprs {
+			if idx > 0 {
+				if v, ok := expr.(clause.OrConditions); ok && len(v.Exprs) == 1 {
+					builder.WriteString(" OR ")
+				} else {
+					builder.WriteString(" AND ")
+				}
+			}
+
+			if len(where.Exprs) > 1 {
+				switch v := expr.(type) {
+				case clause.OrConditions:
+					if len(v.Exprs) == 1 {
+						if e, ok := v.Exprs[0].(clause.Expr); ok {
+							sql := strings.ToLower(e.SQL)
+							wrapInParentheses = strings.Contains(sql, "and") || strings.Contains(sql, "or")
+						}
+					}
+				case clause.AndConditions:
+					if len(v.Exprs) == 1 {
+						if e, ok := v.Exprs[0].(clause.Expr); ok {
+							sql := strings.ToLower(e.SQL)
+							wrapInParentheses = strings.Contains(sql, "and") || strings.Contains(sql, "or")
+						}
+					}
+				case clause.Expr:
+					sql := strings.ToLower(v.SQL)
+					wrapInParentheses = strings.Contains(sql, "and") || strings.Contains(sql, "or")
+				}
+			}
+
+			if wrapInParentheses {
+				builder.WriteString(`(`)
+				expr.Build(builder)
+				builder.WriteString(`)`)
+				wrapInParentheses = false
+			} else {
+				if e, ok := expr.(clause.IN); ok {
+					if values, ok := e.Values[0].([]interface{}); ok {
+						if len(values) > 1 {
+							newExpr := clauses.IN{
+								Column: expr.(clause.IN).Column,
+								Values: expr.(clause.IN).Values,
+							}
+							newExpr.Build(builder)
+							continue
+						}
+					}
+				}
+
+				expr.Build(builder)
+			}
+		}
 	}
 }
 

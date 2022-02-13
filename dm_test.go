@@ -110,11 +110,11 @@ func TestUpdate(t *testing.T) {
 }
 
 // err
-//func TestClausesAssignmentColumns(t *testing.T) {
-//	err := Table(&User{Key: "3", Content: "DDDD"}).ClausesAssignmentColumns("KEY", []string{"DELETED_AT", "CONTENT"})
-//
-//	if err != nil {
-//		fmt.Printf("Error: failed to ClausesAssignmentColumns: %v\n", err)
-//		return
-//	}
-//}
+func TestClausesAssignmentColumns(t *testing.T) {
+	err := Table(&User{Key: "2", Content: "EEE"}).ClausesAssignmentColumns("KEY", []string{"DELETED_AT", "CONTENT"})
+
+	if err != nil {
+		fmt.Printf("Error: failed to ClausesAssignmentColumns: %v\n", err)
+		return
+	}
+}

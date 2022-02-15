@@ -83,12 +83,12 @@ func TestWhere(t *testing.T) {
 	}
 }
 
-func TestAll(t *testing.T) {
+func TestGetAll(t *testing.T) {
 	var data []User
 	err := Table().GetAll(&data)
 
 	if err != nil {
-		fmt.Printf("Error: failed to All: %v\n", err)
+		fmt.Printf("Error: failed to GetAll: %v\n", err)
 		return
 	}
 }
@@ -109,7 +109,7 @@ func TestDelete(t *testing.T) {
 	_ = Table(&User{Key: "1"}).GetWhere(&data)
 
 	if err != nil || len(data) == 1 {
-		fmt.Printf("Error: failed to Update: %v\n", err)
+		fmt.Printf("Error: failed to Delete: %v\n", err)
 		return
 	}
 }

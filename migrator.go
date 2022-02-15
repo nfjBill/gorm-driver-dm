@@ -120,7 +120,6 @@ func (m Migrator) CreateTable(values ...interface{}) error {
 					}
 				}
 			}
-
 			for _, chk := range stmt.Schema.ParseCheckConstraints() {
 				createTableSQL += "CONSTRAINT ? CHECK (?),"
 				values = append(values, clause.Column{Name: chk.Name}, clause.Expr{SQL: chk.Constraint})

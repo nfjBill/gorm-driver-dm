@@ -48,7 +48,7 @@ func (d Dialector) Name() string {
 
 func (d Dialector) Initialize(db *gorm.DB) (err error) {
 	db.NamingStrategy = Namer{}
-	d.DefaultStringSize = 1024
+	d.DefaultStringSize = 4096
 
 	// register callbacks
 	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{})
@@ -257,7 +257,7 @@ func (d Dialector) DataTypeOf(field *schema.Field) string {
 			}
 		}
 
-		if size >= 2000 {
+		if size > 4096 {
 			sqlType = "CLOB"
 		} else {
 			sqlType = fmt.Sprintf("VARCHAR2(%d)", size)

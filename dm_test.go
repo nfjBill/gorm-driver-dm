@@ -12,7 +12,7 @@ var db *gorm.DB
 
 func init() {
 	var err error
-	dsn := "dm://sysdba:aaaaaaaaa@192.168.31.192:5236?autoCommit=true"
+	dsn := "dm://sysdba:SYSDBA@127.0.0.1:5236?autoCommit=true"
 	db, err = gorm.Open(Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
@@ -25,15 +25,8 @@ func init() {
 	TB(db)
 }
 
-type Model struct {
-	ID        uint `gorm:"primarykey,autoIncrement"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-}
-
 type User struct {
-	Model
+	gorm.Model
 	Key      string `gorm:"index:idx_key,unique,comment:备注"`
 	Name     string
 	Age      int
@@ -104,6 +97,18 @@ func TestUpdate(t *testing.T) {
 	err := Table(&User{Key: "3"}).Update(&User{Content: "DDDD"})
 
 	if err != nil {
+		fmt.Printf("Error: failed to Update: %v\n", err)
+		return
+	}
+}
+
+func TestDelete(t *testing.T) {
+	err := Table(&User{Key: "1"}).Delete()
+
+	var data []User
+	_ = Table(&User{Key: "1"}).GetWhere(&data)
+
+	if err != nil || len(data) == 1 {
 		fmt.Printf("Error: failed to Update: %v\n", err)
 		return
 	}

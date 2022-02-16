@@ -19,7 +19,7 @@ db, err := gorm.Open(dm.Open(dsn), &gorm.Config{})
 
 ## 入门
 
-- `clone`本项目到本地，进入项目目录
+- `clone`本项目到本地，进入项目目录，打开`dm_test.go`
 - 修改`dsn`调整为本地正确信息
 - 运行`go test -v`
 - 如果无报错，参考`dm_test.go`使用即可

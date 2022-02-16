@@ -12,7 +12,8 @@ var db *gorm.DB
 
 func init() {
 	var err error
-	dsn := "dm://sysdba:SYSDBA@127.0.0.1:5236?autoCommit=true"
+	//dsn := "dm://sysdba:SYSDBA@local.nfjbill.ren:5236?autoCommit=true"
+	dsn := "dm://sysdba:SYSDBA@fe-repo.inner.px.nfjbill.ren:5237?autoCommit=true"
 	db, err = gorm.Open(Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})

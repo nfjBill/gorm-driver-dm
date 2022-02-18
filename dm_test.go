@@ -28,8 +28,8 @@ func init() {
 
 type User struct {
 	gorm.Model
-	Key      string `gorm:"index:idx_key,unique"`
-	Name     string
+	Key      string `gorm:"index:key,unique"`
+	Name     string `gorm:"index:name"`
 	Age      int
 	Content  dmSchema.Clob `gorm:"size:1024000"`
 	Birthday time.Time

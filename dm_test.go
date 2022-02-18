@@ -35,6 +35,15 @@ type User struct {
 	Birthday time.Time
 }
 
+type Per struct {
+	gorm.Model
+	Key      string `gorm:"index:key,unique"`
+	Name     string `gorm:"index:name"`
+	Age      int
+	Content  dmSchema.Clob `gorm:"size:1024000"`
+	Birthday time.Time
+}
+
 func TestAutoMigrate(t *testing.T) {
 	var err error
 
@@ -50,6 +59,9 @@ func TestAutoMigrate(t *testing.T) {
 	err = Table().AutoMigrate(&User{})
 	err = Table().AutoMigrate(&User{})
 	err = Table().AutoMigrate(&User{})
+	err = Table().AutoMigrate(&Per{})
+	err = Table().AutoMigrate(&Per{})
+	err = Table().AutoMigrate(&Per{})
 
 	if err != nil {
 		fmt.Printf("Error: failed to AutoMigrate: %v\n", err)
@@ -59,7 +71,7 @@ func TestAutoMigrate(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	err := Table(&User{Key: "1", Name: "Jinzhu", Age: 18, Content: "asdfdasfasdfasdfj手机卡是点击", Birthday: time.Now()}).Create()
-	_ = Table(&User{Key: "2", Name: "Jinzhu", Age: 19, Content: "bbb", Birthday: time.Now()}).Create()
+	_ = Table(&User{Key: "2", Name: "Jinzhu1", Age: 19, Content: "bbb", Birthday: time.Now()}).Create()
 	_ = Table(&User{Key: "3", Name: "Jinzhu2", Age: 20, Content: "ccc", Birthday: time.Now()}).Create()
 
 	if err != nil {

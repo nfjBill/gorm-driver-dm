@@ -20,9 +20,7 @@ type BuildIndexOptionsInterface interface {
 }
 
 func (m Migrator) CurrentDatabase() (name string) {
-	m.DB.Raw(
-		fmt.Sprintf(`SELECT ORA_DATABASE_NAME as "Current Database" FROM %s`, m.Dialector.(Dialector).DummyTableName()),
-	).Row().Scan(&name)
+	m.DB.Raw("SELECT SYS_CONTEXT ('userenv', 'current_schema') FROM DUAL").Row().Scan(&name)
 	return
 }
 
@@ -342,9 +340,10 @@ func (m Migrator) HasIndex(value interface{}, name string) bool {
 		}
 
 		return m.DB.Raw(
-			"SELECT COUNT(*) FROM USER_INDEXES WHERE TABLE_NAME = ? AND INDEX_NAME = ?",
-			m.Migrator.DB.NamingStrategy.TableName(stmt.Table),
-			m.Migrator.DB.NamingStrategy.IndexName(stmt.Table, name),
+			fmt.Sprintf(`SELECT COUNT(*) FROM USER_INDEXES WHERE TABLE_NAME = ('%s') AND INDEX_NAME = ('%s')`,
+				m.Migrator.DB.NamingStrategy.TableName(stmt.Table),
+				m.Migrator.DB.NamingStrategy.IndexName(stmt.Table, name),
+			),
 		).Row().Scan(&count)
 	})
 

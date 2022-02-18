@@ -35,7 +35,7 @@ type User struct {
 	Birthday time.Time
 }
 
-type Per struct {
+type PerPel struct {
 	gorm.Model
 	Key      string `gorm:"index:key,unique"`
 	Name     string `gorm:"index:name"`
@@ -59,9 +59,9 @@ func TestAutoMigrate(t *testing.T) {
 	err = Table().AutoMigrate(&User{})
 	err = Table().AutoMigrate(&User{})
 	err = Table().AutoMigrate(&User{})
-	err = Table().AutoMigrate(&Per{})
-	err = Table().AutoMigrate(&Per{})
-	err = Table().AutoMigrate(&Per{})
+	err = Table().AutoMigrate(&PerPel{})
+	err = Table().AutoMigrate(&PerPel{})
+	err = Table().AutoMigrate(&PerPel{})
 
 	if err != nil {
 		fmt.Printf("Error: failed to AutoMigrate: %v\n", err)

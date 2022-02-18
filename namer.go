@@ -34,10 +34,10 @@ func (n Namer) CheckerName(table, column string) (name string) {
 }
 
 func (n Namer) IndexName(table, column string) (name string) {
-	cl := n.NamingStrategy.IndexName(table, column)
-	ac := strings.Split(strings.ToLower(column), "idx")
+	tlc := strings.ToLower(column)
 
-	if len(ac) > 1 {
+	cl := n.NamingStrategy.IndexName(table, column)
+	if strings.Contains(tlc, "idx_"+strings.ToLower(table)) && strings.Contains(tlc, strings.ToLower(column)) {
 		cl = column
 	}
 

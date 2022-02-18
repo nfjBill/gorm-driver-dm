@@ -15,6 +15,10 @@ type Migrator struct {
 	migrator.Migrator
 }
 
+type BuildIndexOptionsInterface interface {
+	BuildIndexOptions([]schema.IndexOption, *gorm.Statement) []interface{}
+}
+
 func (m Migrator) CurrentDatabase() (name string) {
 	m.DB.Raw(
 		fmt.Sprintf(`SELECT ORA_DATABASE_NAME as "Current Database" FROM %s`, m.Dialector.(Dialector).DummyTableName()),
@@ -42,6 +46,37 @@ func buildConstraint(constraint *schema.Constraint) (sql string, results []inter
 	}
 	results = append(results, clause.Table{Name: constraint.Name}, foreignKeys, clause.Table{Name: constraint.ReferenceSchema.Table}, references)
 	return
+}
+
+func (m Migrator) CreateIndex(value interface{}, name string) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
+		if idx := stmt.Schema.LookIndex(name); idx != nil {
+			opts := m.DB.Migrator().(BuildIndexOptionsInterface).BuildIndexOptions(idx.Fields, stmt)
+			values := []interface{}{clause.Column{Name: idx.Name}, m.CurrentTable(stmt), opts}
+
+			createIndexSQL := "CREATE "
+			if idx.Class != "" {
+				createIndexSQL += idx.Class + " "
+			}
+			createIndexSQL += "INDEX ? ON ??"
+
+			if idx.Type != "" {
+				createIndexSQL += " USING " + idx.Type
+			}
+
+			//if idx.Comment != "" {
+			//	createIndexSQL += fmt.Sprintf(" COMMENT '%s'", idx.Comment)
+			//}
+
+			if idx.Option != "" {
+				createIndexSQL += " " + idx.Option
+			}
+
+			return m.DB.Exec(createIndexSQL, values...).Error
+		}
+
+		return fmt.Errorf("failed to create index with name %s", name)
+	})
 }
 
 func (m Migrator) CreateTable(values ...interface{}) error {
@@ -85,11 +120,12 @@ func (m Migrator) CreateTable(values ...interface{}) error {
 
 			for _, idx := range stmt.Schema.ParseIndexes() {
 				if m.CreateIndexAfterCreateTable {
-					//defer func(value interface{}, name string) {
-					//	if errr == nil {
-					//		errr = tx.Migrator().CreateIndex(value, name)
-					//	}
-					//}(value, idx.Name)
+					defer func(value interface{}, name string) {
+						if errr == nil {
+							//errr = tx.Migrator().CreateIndex(value, name)
+							errr = m.CreateIndex(value, name)
+						}
+					}(value, idx.Name)
 				} else {
 					if idx.Class != "" {
 						createTableSQL += idx.Class + " "

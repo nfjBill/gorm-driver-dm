@@ -28,7 +28,7 @@ func init() {
 
 type User struct {
 	gorm.Model
-	Key      string `gorm:"index:idx_key,unique,comment:备注"`
+	Key      string `gorm:"index:idx_key,unique"`
 	Name     string
 	Age      int
 	Content  dmSchema.Clob `gorm:"size:1024000"`
@@ -36,6 +36,8 @@ type User struct {
 }
 
 func TestAutoMigrate(t *testing.T) {
+	var err error
+
 	if Table().HasTable(&User{}) {
 		err := Table().DropTable(&User{})
 
@@ -45,7 +47,9 @@ func TestAutoMigrate(t *testing.T) {
 		}
 	}
 
-	err := Table().AutoMigrate(&User{})
+	err = Table().AutoMigrate(&User{})
+	err = Table().AutoMigrate(&User{})
+	err = Table().AutoMigrate(&User{})
 
 	if err != nil {
 		fmt.Printf("Error: failed to AutoMigrate: %v\n", err)

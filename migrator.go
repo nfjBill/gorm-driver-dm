@@ -52,7 +52,7 @@ func (m Migrator) CreateIndex(value interface{}, name string) error {
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if idx := stmt.Schema.LookIndex(name); idx != nil {
 			opts := m.DB.Migrator().(BuildIndexOptionsInterface).BuildIndexOptions(idx.Fields, stmt)
-			values := []interface{}{clause.Column{Name: idx.Name}, m.CurrentTable(stmt), opts}
+			values := []interface{}{clause.Column{Name: m.Migrator.DB.NamingStrategy.IndexName(stmt.Table, idx.Name)}, m.CurrentTable(stmt), opts}
 
 			createIndexSQL := "CREATE "
 			if idx.Class != "" {

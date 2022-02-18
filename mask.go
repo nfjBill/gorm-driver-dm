@@ -69,6 +69,11 @@ func (stb *STable) ClausesAssignmentColumns(name string, doUpdates []string) err
 	} else {
 		return stb.Conn.Create(stb.Table).Error
 	}
+
+	//return stb.Conn.Clauses(clause.OnConflict{
+	//	Columns:   []clause.Column{{Name: name}},
+	//	DoUpdates: clause.AssignmentColumns(doUpdates),
+	//}).Create(stb.Table).Error
 }
 
 func (stb *STable) Delete() error {

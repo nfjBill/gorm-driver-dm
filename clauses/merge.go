@@ -15,7 +15,7 @@ func (merge Merge) Name() string {
 }
 
 func MergeDefaultExcludeName() string {
-	return "exclude"
+	return "excluded"
 }
 
 // Build build from clause

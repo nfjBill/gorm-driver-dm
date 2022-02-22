@@ -15,11 +15,11 @@ func (w WhenMatched) Name() string {
 
 func (w WhenMatched) Build(builder clause.Builder) {
 	if len(w.Set) > 0 {
-		builder.WriteString(" THEN")
-		builder.WriteString(" UPDATE ")
-		builder.WriteString(w.Name())
+		builder.WriteString("THEN")
+		builder.WriteString(" UPDATE")
+		builder.WriteString(" SET")
 		builder.WriteByte(' ')
-		w.Build(builder)
+		w.Set.Build(builder)
 
 		buildWhere := func(where clause.Where) {
 			builder.WriteString(where.Name())
@@ -36,4 +36,9 @@ func (w WhenMatched) Build(builder clause.Builder) {
 			buildWhere(w.Delete)
 		}
 	}
+}
+
+func (w WhenMatched) MergeClause(clause *clause.Clause) {
+	clause.Name = w.Name()
+	clause.Expression = w
 }

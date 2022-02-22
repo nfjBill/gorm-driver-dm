@@ -34,11 +34,7 @@ func Create(db *gorm.DB) {
 	if stmt.SQL.String() == "" {
 		values := callbacks.ConvertToCreateValues(stmt)
 		onConflict, hasConflict := stmt.Clauses["ON CONFLICT"].Expression.(clause.OnConflict)
-		// are all columns in value the primary fields in schema only?
-		if hasConflict && funk.Contains(
-			funk.Map(values.Columns, func(c clause.Column) string { return c.Name }),
-			funk.Map(schema.PrimaryFields, func(field *gormSchema.Field) string { return field.DBName }),
-		) {
+		if hasConflict {
 			stmt.AddClauseIfNotExists(clauses.Merge{
 				Using: []clause.Interface{
 					clause.Select{
@@ -56,16 +52,17 @@ func Create(db *gorm.DB) {
 						}).([]clause.Column),
 					},
 					clause.From{
-						Tables: []clause.Table{{Name: db.Dialector.(Dialector).DummyTableName()}},
+						Tables: []clause.Table{{Name: "DUAL"}},
 					},
 				},
-				On: funk.Map(schema.PrimaryFields, func(field *gormSchema.Field) clause.Expression {
+				On: funk.Map(onConflict.Columns, func(field clause.Column) clause.Expression {
 					return clause.Eq{
-						Column: clause.Column{Table: stmt.Table, Name: field.DBName},
-						Value:  clause.Column{Table: clauses.MergeDefaultExcludeName(), Name: field.DBName},
+						Column: clause.Column{Table: stmt.Table, Name: field.Name},
+						Value:  clause.Column{Table: clauses.MergeDefaultExcludeName(), Name: field.Name},
 					}
 				}).([]clause.Expression),
 			})
+
 			stmt.AddClauseIfNotExists(clauses.WhenMatched{Set: onConflict.DoUpdates})
 			stmt.AddClauseIfNotExists(clauses.WhenNotMatched{Values: values})
 
@@ -117,7 +114,8 @@ func Create(db *gorm.DB) {
 				// sneaky that some transaction inserts will exceed the buffer and so will be pushed at unknown point,
 				// resulting in dangling row entries, so we might need to delete them if an error happens
 
-				switch result, err := stmt.ConnPool.ExecContext(stmt.Context, stmt.SQL.String(), stmt.Vars...); err {
+				sqlStr := stmt.Explain(stmt.SQL.String(), stmt.Vars...)
+				switch result, err := stmt.ConnPool.ExecContext(stmt.Context, sqlStr, stmt.Vars...); err {
 				case nil: // success
 					db.RowsAffected, _ = result.RowsAffected()
 

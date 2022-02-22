@@ -3,6 +3,7 @@ package dm
 import (
 	"database/sql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"reflect"
 	"strings"
 )
@@ -54,26 +55,10 @@ func (stb *STable) GetAll(dest interface{}) error {
 }
 
 func (stb *STable) ClausesAssignmentColumns(name string, doUpdates []string) error {
-	we := RefInclude(RefClone(stb.Table), []string{name})
-	up := RefInclude(RefClone(stb.Table), doUpdates)
-
-	var data []interface{}
-	err := stb.Conn.Model(we).Select("ID").Where(we).Find(&data).Error
-	if len(data) > 0 {
-		tx := stb.Conn.Begin()
-		if err = tx.Where(we).Updates(up).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-		return tx.Commit().Error
-	} else {
-		return stb.Conn.Create(stb.Table).Error
-	}
-
-	//return stb.Conn.Clauses(clause.OnConflict{
-	//	Columns:   []clause.Column{{Name: name}},
-	//	DoUpdates: clause.AssignmentColumns(doUpdates),
-	//}).Create(stb.Table).Error
+	return stb.Conn.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: name}},
+		DoUpdates: clause.AssignmentColumns(doUpdates),
+	}).Create(stb.Table).Error
 }
 
 func (stb *STable) Delete() error {

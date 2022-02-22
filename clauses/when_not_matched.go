@@ -21,7 +21,7 @@ func (w WhenNotMatched) Build(builder clause.Builder) {
 
 		builder.WriteString(" THEN")
 		builder.WriteString(" INSERT ")
-		w.Build(builder)
+		w.Values.Build(builder)
 
 		if len(w.Where.Exprs) > 0 {
 			builder.WriteString(w.Where.Name())
@@ -29,4 +29,9 @@ func (w WhenNotMatched) Build(builder clause.Builder) {
 			w.Where.Build(builder)
 		}
 	}
+}
+
+func (w WhenNotMatched) MergeClause(clause *clause.Clause) {
+	clause.Name = w.Name()
+	clause.Expression = w
 }

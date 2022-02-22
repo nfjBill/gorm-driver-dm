@@ -13,7 +13,7 @@ var db *gorm.DB
 func init() {
 	var err error
 	//dsn := "dm://sysdba:SYSDBA@local.nfjbill.ren:5236?autoCommit=true"
-	dsn := "dm://sysdba:SYSDBA@fe-repo.inner.px.nfjbill.ren:5237?autoCommit=true"
+	dsn := "dm://sysdba:SYSDBA@192.168.0.105:5236?autoCommit=true"
 	db, err = gorm.Open(Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
@@ -134,6 +134,7 @@ func TestDelete(t *testing.T) {
 // err
 func TestClausesAssignmentColumns(t *testing.T) {
 	err := Table(&User{Key: "2", Content: "EEE"}).ClausesAssignmentColumns("KEY", []string{"DELETED_AT", "CONTENT"})
+	err = Table(&User{Key: "4", Name: "Jinzhu5", Content: "FFF", Birthday: time.Now()}).ClausesAssignmentColumns("KEY", []string{"DELETED_AT", "CONTENT", "BIRTHDAY"})
 
 	if err != nil {
 		fmt.Printf("Error: failed to ClausesAssignmentColumns: %v\n", err)

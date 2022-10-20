@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/nfjBill/gorm-driver-dm/clauses"
 	"gorm.io/gorm/utils"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -279,7 +278,7 @@ func (d Dialector) DataTypeOf(field *schema.Field) string {
 		}
 
 		if sqlType == "" {
-			log.Fatalln(fmt.Sprintf("invalid sql type %s (%s) for dm", field.FieldType.Name(), field.FieldType.String()))
+			panic(fmt.Sprintf("invalid sql type %s (%s) for dm", field.FieldType.Name(), field.FieldType.String()))
 		}
 
 		notNull, _ := field.TagSettings["NOT NULL"]
